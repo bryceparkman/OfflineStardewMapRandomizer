@@ -1,2 +1,1 @@
-# StardewArchipelago
-Archipelago Implementation for Stardew Valley
+# OfflineStardewMapRandomizer
