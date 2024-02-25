@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
+using StardewRoomRandomizer.Constants;
 using StardewRoomRandomizer.Extensions;
 using StardewRoomRandomizer.ModCompatability;
 using StardewRoomRandomizer.Warping;
@@ -7,7 +8,6 @@ using StardewValley;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 
 namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
 {
@@ -23,161 +23,8 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
         public Dictionary<string, string> ModifiedEntrances { get; private set; }
         public Dictionary<string, string> InvertedModifiedEntrances { get; private set; }
         public Dictionary<string, string> UnModifiedEntrances { get; private set; }
-        public List<string> warps = new List<string>()
-        {
-            "Farm to FarmCave",
-            "Tent to Mountain",
-            "WitchHut to WizardHouseBasement",
-            "Blacksmith to Town",
-            "Town to Trailer",
-            "ManorHouse to Town",
-            "Town to ArchaeologyHouse",
-            "BathHouse_{0}Locker to BathHouse_Entry",
-            "Beach to FishShop",
-            "Sunroom to SeedShop",
-            "IslandNorth to IslandFieldOffice",
-            "QiNutRoom to IslandWest",
-            "Mountain to AdventureGuild",
-            "Hospital to Town",
-            "Town to Hospital",
-            "CaptainRoom to IslandWest",
-            "IslandSouthEast to IslandSouthEastCave",
-            "AnimalShop to Forest",
-            "IslandWest to IslandFarmCave",
-            "BoatTunnel to FishShop",
-            "Mountain to LeoTreeHouse",
-            "IslandNorth|12|31 to VolcanoDungeon0|6|49",
-            "Town to JojaMart",
-            "IslandNorthCave1 to IslandNorth",
-            "Town to SeedShop",
-            "SebastianRoom to ScienceHouse",
-            "IslandWest to CaptainRoom",
-            "WitchHut to WitchSwamp",
-            "IslandWest to IslandWestCave1",
-            "Saloon to Town",
-            "Beach to ElliottHouse",
-            "WitchSwamp to WitchWarpCave",
-            "BathHouse_Entry to BathHouse_{0}Locker",
-            "Witch Warp Cave to Railroad",
-            "Island North to IslandNorthCave1",
-            "IslandSouthEastCave to IslandSouthEast",
-            "Town to Blacksmith",
-            "ArchaeologyHouse to Town",
-            "Town to JoshHouse",
-            "IslandWestCave1 to IslandWest",
-            "WitchSwamp to WitchHut",
-            "AdventureGuild to Mountain",
-            "IslandNorth to VolcanoDungeon0|31|53",
-            "VolcanoDungeon0|31|53 to IslandNorth",
-            "IslandWest to QiNutRoom",
-            "LeahHouse to Forest",
-            "Backwoods to Tunnel",
-            "ScienceHouse|6|24 to Mountain",
-            "SandyHouse to Desert",
-            "IslandEast to IslandShrine",
-            "SkullCave to Desert",
-            "Mountain to Mine|67|17",
-            "LeoTreeHouse to Mountain",
-            "Mountain to ScienceHouse|6|24",
-            "IslandShrine to IslandEast",
-            "Town to CommunityCenter",
-            "WizardHouse to Forest",
-            "SandyHouse to Club",
-            "Club to SandyHouse",
-            "Town to ManorHouse",
-            "Mine|67|17 to Mountain",
-            "BathHouse_{0}Locker to BathHouse_Pool",
-            "HaleyHouse to Town",
-            "Town to SamHouse",
-            "FishShop to Beach",
-            "Sewer to BugLand",
-            "IslandFarmCave to IslandWest",
-            "Mountain to ScienceHouse|3|8",
-            "CommunityCenter to Town",
-            "WitchWarpCave to WitchSwamp",
-            "ScienceHouse to SebastianRoom",
-            "Tunnel to Backwoods",
-            "Mountain to Mine|18|13",
-            "IslandHut to IslandEast",
-            "Forest to LeahHouse",
-            "WizardHouseBasement to WizardHouse",
-            "VolcanoDungeon0|6|49 to IslandNorth|12|31",
-            "Sewer to Forest",
-            "Forest to WizardHouse",
-            "BathHouse_Entry to Railroad",
-            "Town to HaleyHouse",
-            "ElliottHouse to Beach",
-            "Forest to Sewer",
-            "Mine|18|13 to Mountain",
-            "Forest to AnimalShop",
-            "SamHouse to Town",
-            "IslandEast to IslandHut",
-            "IslandFieldOffice to IslandNorth",
-            "Town to Saloon",
-            "Trailer to Town",
-            "Hospital to HarveyRoom",
-            "Sewer to Town",
-            "FishShop to BoatTunnel",
-            "BugLand to Sewer",
-            "Mountain to Tent",
-            "HarveyRoom to Hospital",
-            "Desert to SkullCave",
-            "WizardHouse to WizardHouseBasement",
-            "BathHouse_Pool to BathHouse_{0}Locker",
-            "Town to Sewer",
-            "SeedShop to Town",
-            "Railroad to BathHouse_Entry",
-            "FarmCave to Farm",
-            "Railroad to WitchWarpCave",
-            "ScienceHouse|3|8 to Mountain",
-            "SeedShop to Sunroom",
-            "JojaMart to Town",
-            "Desert to SandyHouse",
-            "JoshHouse to Town"
-        };
-
         private HashSet<string> _checkedEntrancesToday;
         private Dictionary<string, WarpRequest> generatedWarps;
-        private List<string> mapLocations = new List<string>
-        {
-            "Forest", "Town", "Beach", "Backwoods", "Mountain", "Railroad", "IslandNorth", "IslandWest", "IslandEast", "IslandSouthEast", "Desert", "Farm"
-        };
-        private List<string> earlyMapWarps = new List<string>
-        {
-            "Farm to BusStop",
-            "BusStop to Farm",
-            "Farm to Forest",
-            "Forest to Farm",
-            "Farm to Backwoods",
-            "Backwoods to Farm",
-            "BusStop to Town",
-            "Town to BusStop",
-            "Forest to Town",
-            "Town to Forest",
-            "Backwoods to Mountain",
-            "Mountain to Backwoods",
-            "Town to Mountain",
-            "Mountain to Town",
-            "Town to Beach",
-            "Beach to Town",
-            "Mountain to Railroad",
-            "Railroad to Mountain",
-            "IslandEast to IslandNorth",
-            "IslandNorth to IslandEast",
-            "IslandEast to IslandWest",
-            "IslandWest to IslandEast"
-        };
-
-        private List<string> requirementWarps = new List<string>
-        {
-            "Mountain to ScienceHouse|3|8", //Entering Maru's exterior door requires friendship
-            "Forest to LeahHouse", //Entering Leah's house requries friendship
-            "Beach to ElliotHouse", //Entering Elliot's house requries friendship
-            "Forest to WizardHouse", //Entering the Wizard's house requires getting into CC first
-            "Mountain to LeoTreeHouse", //Leo's tree house is end-end-game
-            "Forest to Sewer", //Requires rusty key
-        };
-
         public EntranceManager(IMonitor monitor)
         {
             _monitor = monitor;
@@ -196,10 +43,10 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
             }
         }
 
-        private bool isAccessibleEarly(string entrance)
+        private bool IsAccessibleEarly(string entrance)
         {
             var parts = entrance.Split(TRANSITIONAL_STRING);
-            return !requirementWarps.Contains(entrance) && !parts[0].StartsWith("Island") && !parts[0].Equals("Railroad") && !parts[0].Equals("Desert");
+            return !VanillaMapData.requirementWarps.Contains(entrance) && !parts[0].StartsWith("Island") && !parts[0].Equals("Railroad") && !parts[0].Equals("Desert");
         }
 
         private string FindStartingMap()
@@ -211,7 +58,7 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
                 entrance = ModifiedEntrances[entrance];
                 parts = entrance.Split(TRANSITIONAL_STRING);
             }
-            while (!mapLocations.Contains(parts[1]));
+            while (!VanillaMapData.mapLocations.Contains(parts[1]));
             return parts[1];
         }
 
@@ -221,7 +68,7 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
             if (_config.MatchEntrances)
             {
                 entrance = InvertedModifiedEntrances[entrance];
-                return isAccessibleEarly(entrance);
+                return IsAccessibleEarly(entrance);
             }
             else
             {
@@ -231,30 +78,20 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
                     startingMap = FindStartingMap();
                 }
                 //Find path from starting map to community center. If we don't hit any of the requirement warps we good. Traverse using earlymapwarps and warp
-                return false;
+                return true;
             }
         }
 
-        private bool matchedEntrance(string entrance1, string entrance2)
+        private bool MatchedEntrance(string entrance1, string entrance2)
         {
             string[] parts1 = entrance1.Split(TRANSITIONAL_STRING);
             string[] parts2 = entrance2.Split(TRANSITIONAL_STRING);
-            bool entrance1IsFromMap = mapLocations.Contains(parts1[0]);
-            bool entrance2IsFromMap = mapLocations.Contains(parts2[0]);
-            bool entrance1IsToMap = mapLocations.Contains(parts1[1]);
-            bool entrance2IsToMap = mapLocations.Contains(parts2[1]);
+            bool entrance1IsFromMap = VanillaMapData.mapLocations.Contains(parts1[0]);
+            bool entrance2IsFromMap = VanillaMapData.mapLocations.Contains(parts2[0]);
+            bool entrance1IsToMap = VanillaMapData.mapLocations.Contains(parts1[1]);
+            bool entrance2IsToMap = VanillaMapData.mapLocations.Contains(parts2[1]);
 
-            if (entrance1IsFromMap != entrance2IsFromMap)
-            {
-                return false;
-            }
-
-            if (entrance1IsToMap != entrance2IsToMap)
-            {
-                return false;
-            }
-
-            return true;
+            return (entrance1IsFromMap == entrance2IsFromMap) && (entrance1IsToMap == entrance2IsToMap);
         }
 
         private void ShuffleEntrances()
@@ -275,7 +112,7 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
                     var keys = newModifiedEntrances.Keys.ToArray();
                     var chosenEntrance1 = keys[random.Next(keys.Length)];
                     var chosenEntrance2 = keys[random.Next(keys.Length)];
-                    while (_config.MatchEntrances && !matchedEntrance(chosenEntrance1, chosenEntrance2))
+                    while (_config.MatchEntrances && !MatchedEntrance(chosenEntrance1, chosenEntrance2))
                     {
                         chosenEntrance2 = keys[random.Next(keys.Length)];
                     }
@@ -297,11 +134,11 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
 
             if (config.RandomizeFarmToFarmHouseDoor)
             {
-                warps.Add("Farm to FarmHouse");
-                warps.Add("FarmHouse to Farm");
+                VanillaMapData.warps.Add("Farm to FarmHouse");
+                VanillaMapData.warps.Add("FarmHouse to Farm");
             }
 
-            foreach (var warp in warps)
+            foreach (var warp in VanillaMapData.warps)
             {
                 var aliasedWarp = AliaseFullWarp(warp);
                 UnModifiedEntrances.Add(aliasedWarp, aliasedWarp);
@@ -309,22 +146,22 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
 
             if (_hasSVE)
             {
-                foreach (var warp in _modEntranceManager.GetSVEMaps())
+                foreach (var warp in SVEMapData.sveMapLocations)
                 {
-                    mapLocations.Add(warp);
+                    VanillaMapData.mapLocations.Add(warp);
                 }
 
-                foreach (var warp in _modEntranceManager.GetSVEEarlyMapWarps())
+                foreach (var warp in SVEMapData.sveEarlyMapWarps)
                 {
-                    earlyMapWarps.Add(warp);
+                    VanillaMapData.earlyMapWarps.Add(warp);
                 }
 
                 foreach (var warp in _modEntranceManager.GetSVERequirementWarps())
                 {
-                    requirementWarps.Add(warp);
+                    VanillaMapData.requirementWarps.Add(warp);
                 }
 
-                foreach (var warp in _modEntranceManager.GetSVEWarps())
+                foreach (var warp in SVEMapData.sveWarps)
                 {
                     var aliasedWarp = AliaseFullWarp(warp);
                     UnModifiedEntrances.Add(aliasedWarp, aliasedWarp);
@@ -338,7 +175,6 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
 
         private static void SwapTwoEntrances(Dictionary<string, string> entrances, string entrance1, string entrance2)
         {
-            // Trust me
             var destination1 = entrances[entrance1];
             var destination2 = entrances[entrance2];
             var reversed1 = ReverseKey(entrance1);
@@ -493,7 +329,7 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
 
             if (_hasSVE)
             {
-                var warpConversions = _modEntranceManager.GetSVEWarpConversions();
+                var warpConversions = SVEMapData.sveWarpConversions;
                 if (warpConversions.ContainsKey(newEntrance))
                 {
                     newEntrance = warpConversions[newEntrance];
