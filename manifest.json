@@ -1,0 +1,10 @@
+{
+  "Name": "Stardew Room Randomizer",
+  "Author": "Arkeat",
+  "Version": "1.0.0",
+  "Description": "This mod randomizes all room entrances/exists with each other. Map transitions (such as walking from your farm to Pelican town) and farm house door transitions are preserved",
+  "UniqueID": "Arkeat.StardewRoomRandomizer",
+  "EntryDll": "StardewRoomRandomizer.dll",
+  "MinimumApiVersion": "3.0.0",
+  "UpdateKeys": []
+}
