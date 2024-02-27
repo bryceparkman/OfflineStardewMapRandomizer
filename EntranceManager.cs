@@ -50,19 +50,6 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
             return !MapData.requirementWarps.Contains(entrance) && !parts[0].StartsWith("Island") && !parts[0].Equals("Railroad") && !parts[0].Equals("Desert");
         }
 
-        private string FindStartingMap()
-        {
-            string entrance = "FarmHouse to Farm";
-            string[] parts;
-            do
-            {
-                entrance = ModifiedEntrances[entrance];
-                parts = entrance.Split(TRANSITIONAL_STRING);
-            }
-            while (!MapData.mapLocations.Contains(parts[1]));
-            return parts[1];
-        }
-
         private void TraverseMap(string area, ref bool easyPathToCC, ref List<string> explored)
         {
             if (easyPathToCC) return;
