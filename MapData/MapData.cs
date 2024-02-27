@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace StardewRoomRandomizer.Constants
 {
-    public class VanillaMapData
+    public class MapData
     {
         public static List<string> warps = new()
         {
@@ -143,9 +143,7 @@ namespace StardewRoomRandomizer.Constants
             "Mountain to Railroad",
             "Railroad to Mountain",
             "IslandEast to IslandNorth",
-            "IslandNorth to IslandEast",
-            "IslandEast to IslandWest",
-            "IslandWest to IslandEast"
+            "IslandEast to IslandWest"
         };
 
         public static List<string> requirementWarps = new()

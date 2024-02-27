@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using HarmonyLib;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewRoomRandomizer.Constants;
 using StardewRoomRandomizer.Extensions;
@@ -8,6 +9,7 @@ using StardewValley;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
 {
@@ -21,7 +23,6 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
         private bool _hasSVE;
         private ModConfig _config;
         public Dictionary<string, string> ModifiedEntrances { get; private set; }
-        public Dictionary<string, string> InvertedModifiedEntrances { get; private set; }
         public Dictionary<string, string> UnModifiedEntrances { get; private set; }
         private HashSet<string> _checkedEntrancesToday;
         private Dictionary<string, WarpRequest> generatedWarps;
@@ -46,7 +47,7 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
         private bool IsAccessibleEarly(string entrance)
         {
             var parts = entrance.Split(TRANSITIONAL_STRING);
-            return !VanillaMapData.requirementWarps.Contains(entrance) && !parts[0].StartsWith("Island") && !parts[0].Equals("Railroad") && !parts[0].Equals("Desert");
+            return !MapData.requirementWarps.Contains(entrance) && !parts[0].StartsWith("Island") && !parts[0].Equals("Railroad") && !parts[0].Equals("Desert");
         }
 
         private string FindStartingMap()
@@ -58,38 +59,52 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
                 entrance = ModifiedEntrances[entrance];
                 parts = entrance.Split(TRANSITIONAL_STRING);
             }
-            while (!VanillaMapData.mapLocations.Contains(parts[1]));
+            while (!MapData.mapLocations.Contains(parts[1]));
             return parts[1];
+        }
+
+        private void TraverseMap(string area, ref bool easyPathToCC, ref List<string> explored)
+        {
+            if (easyPathToCC) return;
+
+            foreach((string from, string to) in ModifiedEntrances)
+            {
+                string[] fromParts = from.Split(TRANSITIONAL_STRING);
+                string[] toParts = to.Split(TRANSITIONAL_STRING);
+                if (fromParts[0] != area || explored.Contains(from)) continue;
+                if (MapData.requirementWarps.Contains(from)) continue;
+                if (to == "Town to CommunityCenter")
+                {
+                    easyPathToCC = true;
+                }
+                explored.Add(from);
+                TraverseMap(toParts[0], ref easyPathToCC, ref explored);
+            }
+
+            foreach (string warp in MapData.earlyMapWarps)
+            {
+                string[] parts = warp.Split(TRANSITIONAL_STRING);
+                if (parts[0] != area || explored.Contains(warp)) continue;
+                explored.Add(warp);
+                TraverseMap(parts[1], ref easyPathToCC, ref explored);
+            }
+
+            return;
         }
 
         private bool CommunityCenterIsEarly()
         {
-            var entrance = "Town to CommunityCenter";
-            if (_config.MatchEntrances)
-            {
-                entrance = InvertedModifiedEntrances[entrance];
-                return IsAccessibleEarly(entrance);
-            }
-            else
-            {
-                string startingMap = "Farm";
-                if (_config.RandomizeFarmToFarmHouseDoor)
-                {
-                    startingMap = FindStartingMap();
-                }
-                //Find path from starting map to community center. If we don't hit any of the requirement warps we good. Traverse using earlymapwarps and warp
-                return true;
-            }
+            return IsAccessibleEarly(ModifiedEntrances.FirstOrDefault(x => x.Value == "Town to CommunityCenter").Key);
         }
 
         private bool MatchedEntrance(string entrance1, string entrance2)
         {
             string[] parts1 = entrance1.Split(TRANSITIONAL_STRING);
             string[] parts2 = entrance2.Split(TRANSITIONAL_STRING);
-            bool entrance1IsFromMap = VanillaMapData.mapLocations.Contains(parts1[0]);
-            bool entrance2IsFromMap = VanillaMapData.mapLocations.Contains(parts2[0]);
-            bool entrance1IsToMap = VanillaMapData.mapLocations.Contains(parts1[1]);
-            bool entrance2IsToMap = VanillaMapData.mapLocations.Contains(parts2[1]);
+            bool entrance1IsFromMap = MapData.mapLocations.Contains(parts1[0]);
+            bool entrance2IsFromMap = MapData.mapLocations.Contains(parts2[0]);
+            bool entrance1IsToMap = MapData.mapLocations.Contains(parts1[1]);
+            bool entrance2IsToMap = MapData.mapLocations.Contains(parts2[1]);
 
             return (entrance1IsFromMap == entrance2IsFromMap) && (entrance1IsToMap == entrance2IsToMap);
         }
@@ -112,7 +127,7 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
                     var keys = newModifiedEntrances.Keys.ToArray();
                     var chosenEntrance1 = keys[random.Next(keys.Length)];
                     var chosenEntrance2 = keys[random.Next(keys.Length)];
-                    while (_config.MatchEntrances && !MatchedEntrance(chosenEntrance1, chosenEntrance2))
+                    while (!MatchedEntrance(chosenEntrance1, chosenEntrance2))
                     {
                         chosenEntrance2 = keys[random.Next(keys.Length)];
                     }
@@ -120,7 +135,6 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
                 }
 
                 ModifiedEntrances = new Dictionary<string, string>(newModifiedEntrances, StringComparer.OrdinalIgnoreCase);
-                InvertedModifiedEntrances = ModifiedEntrances.ToDictionary(x => x.Value, x => x.Key);
             }
             while (_config.GuaranteeEarlyCommunityCenterAccess && !CommunityCenterIsEarly());
         }
@@ -134,11 +148,11 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
 
             if (config.RandomizeFarmToFarmHouseDoor)
             {
-                VanillaMapData.warps.Add("Farm to FarmHouse");
-                VanillaMapData.warps.Add("FarmHouse to Farm");
+                MapData.warps.Add("Farm to FarmHouse");
+                MapData.warps.Add("FarmHouse to Farm");
             }
 
-            foreach (var warp in VanillaMapData.warps)
+            foreach (var warp in MapData.warps)
             {
                 var aliasedWarp = AliaseFullWarp(warp);
                 UnModifiedEntrances.Add(aliasedWarp, aliasedWarp);
@@ -148,17 +162,17 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
             {
                 foreach (var warp in SVEMapData.sveMapLocations)
                 {
-                    VanillaMapData.mapLocations.Add(warp);
+                    MapData.mapLocations.Add(warp);
                 }
 
                 foreach (var warp in SVEMapData.sveEarlyMapWarps)
                 {
-                    VanillaMapData.earlyMapWarps.Add(warp);
+                    MapData.earlyMapWarps.Add(warp);
                 }
 
                 foreach (var warp in _modEntranceManager.GetSVERequirementWarps())
                 {
-                    VanillaMapData.requirementWarps.Add(warp);
+                    MapData.requirementWarps.Add(warp);
                 }
 
                 foreach (var warp in SVEMapData.sveWarps)
@@ -205,16 +219,21 @@ namespace StardewRoomRandomizer.GameModifications.EntranceRandomizer
             }
 
             var correctDesiredWarpName = _equivalentAreas.GetCorrectEquivalentEntrance(desiredWarpName);
-
-            if (_checkedEntrancesToday.Contains(correctDesiredWarpName))
+            
+            if(_config.RandomizeDoorsEveryDay && _checkedEntrancesToday.Contains(correctDesiredWarpName))
             {
                 if (generatedWarps.ContainsKey(correctDesiredWarpName))
                 {
                     warpRequest = generatedWarps[correctDesiredWarpName];
                     return true;
                 }
-
                 return false;
+            }
+
+            if (generatedWarps.ContainsKey(correctDesiredWarpName))
+            {
+                warpRequest = generatedWarps[correctDesiredWarpName];
+                return true;
             }
 
             return TryFindWarpToDestination(correctDesiredWarpName, out warpRequest);
